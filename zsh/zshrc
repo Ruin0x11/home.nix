@@ -1,0 +1,98 @@
+#!/bin/zsh
+
+platform='unknown'
+unamestr=$(uname)
+if [[ "$unamestr" == 'Linux' ]]; then
+    platform='linux'
+elif [[ "$unamestr" == 'Darwin' ]]; then
+    platform='darwin'
+fi
+hostname=$(hostname)
+
+HISTSIZE=100000               #How many lines of history to keep in memory
+HISTFILE=~/.zsh_history     #Where to save history to disk
+SAVEHIST=100000               #Number of history entries to save to disk
+#HISTDUP=erase               #Erase duplicates in the history file
+setopt    appendhistory     #Append history to the history file (no overwriting)
+setopt    sharehistory      #Share history across terminals
+setopt    incappendhistory  #Immediately append to the history file, not just when a term is killedbindkey -v
+setopt INC_APPEND_HISTORY
+
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/ruin/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+autoload -U promptinit
+promptinit
+autoload -U colors && colors
+
+PROMPT=' %B%F{red}» %f%b'
+RPROMPT='%B%F{blue}%~ %B%F{white}%#%b'
+
+export EDITOR="vim"
+export ALTERNATE_EDITOR=""
+# source $HOME/.aliases
+# source $HOME/.zshrc.functions
+# source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# source $HOME/.zsh/zsh-history-substring-search/zsh-history-substring-search.zsh
+# source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
+# source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+# export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/usr/share/zsh/plugins/zsh-syntax-highlighting/highlighters
+# export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=cyan,bold,underline"
+# source $HOME/.zsh/git.zsh
+
+# bind UP and DOWN arrow keys
+zmodload zsh/terminfo
+#bindkey "$terminfo[kcuu1]" history-substring-search-up
+#bindkey "$terminfo[kcud1]" history-substring-search-down
+
+bindkey "^[[A" history-substring-search-up
+bindkey "^[[B" history-substring-search-down
+
+# bind P and N for EMACS mode
+bindkey -M emacs '^P' history-substring-search-up
+bindkey -M emacs '^N' history-substring-search-down
+
+# bind k and j for VI mode
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+threads=1
+if [[ $platform == 'linux' ]]; then
+    threads=$(grep -c ^processor /proc/cpuinfo)
+elif [[ $platform == 'darwin' ]]; then
+    threads=$(sysctl -n hw.ncpu)
+fi
+export MAKEFLAGS="-j $threads"
+
+zstyle ':completion:*' rehash true
+
+setopt AUTO_MENU           # Show completion menu on a succesive tab press.
+setopt AUTO_LIST           # Automatically list choices on ambiguous completion.
+setopt AUTO_PARAM_SLASH    # If completed parameter is a directory, add a trailing slash.
+unsetopt MENU_COMPLETE     # Do not autoselect the first completion entry.
+unsetopt LIST_AMBIGUOUS
+unsetopt NOMATCH
+setopt HIST_IGNORE_SPACE
+setopt RM_STAR_WAIT
+
+setopt AUTO_PUSHD                  # pushes the old directory onto the stack
+setopt PUSHD_MINUS                 # exchange the meanings of '+' and '-'
+setopt CDABLE_VARS                 # expand the expression (allows 'cd -2/tmp')
+autoload -U compinit && compinit   # load + start completion
+zstyle ':completion:*:directory-stack' list-colors '=(#b) #([0-9]#)*( *)==95=38;5;12'
+
+# Simpler prompt when using Emacs
+if [ "$TERM" = "eterm-color" ]; then
+    PS1="%~ %# "
+    RPS1=
+fi
+
+ulimit -n 100000
